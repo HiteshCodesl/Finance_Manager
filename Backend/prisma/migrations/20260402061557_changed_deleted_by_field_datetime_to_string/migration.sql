@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Record" ALTER COLUMN "deletedBy" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "deletedBy" SET DATA TYPE TEXT;

@@ -12,11 +12,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    
+    console.log("decoded", decoded.id, decoded.role)
     if(decoded) {  
-        req.id = decoded.id;
-        req.role = decoded.role;
-        console.log("auth successful", req.id, req.role);
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        }
+        console.log("auth successful", req.user!.id, req.user!.role);
         next();
     }else {
         return res.status(400).json({

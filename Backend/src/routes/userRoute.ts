@@ -1,13 +1,12 @@
 import express from "express";
-import { loginSchema, signupSchema } from "../types/userTypes";
-import { prisma } from "../lib/prisma";
+import { loginSchema, signupSchema } from "../types/userTypes.js";
+import { prisma } from "../lib/prisma.js";
 import { compare, hash } from "bcrypt";
 import jwt from "jsonwebtoken";
-import { authMiddleware } from "../middleware/auth";
-import { authorizeRoles } from "../middleware/authorize";
-import { is } from "zod/locales";
+import { authMiddleware } from "../middleware/auth.js";
+import { authorizeRoles } from "../middleware/authorize.js";
 
-const userRouter = express.Router();
+export const userRouter = express.Router();
 
 type Role = "VIEWER" | "ANALYST" | "ADMIN";
 
@@ -127,8 +126,8 @@ userRouter.post('/login', async (req, res) => {
 })
 
 userRouter.get('/me', authMiddleware, async (req, res) => {
-    const userId = req.id;
-    const role = req.role;
+    const userId = req.user!.id;
+    const role = req.user!.role;
 
     console.log("userId", userId)
     console.log("role", role);
@@ -149,7 +148,14 @@ userRouter.get('/me', authMiddleware, async (req, res) => {
 
     return res.status(201).json({
         "success": true,
-        "data": profile
+        "data": ({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+            active: profile.isActive,
+            createdAt: profile.createdAt
+        })
     })
 })
 
@@ -190,6 +196,7 @@ userRouter.patch("/update/:id", authMiddleware, authorizeRoles("ADMIN"), async (
 userRouter.patch("/delete/:id", authMiddleware, authorizeRoles("ADMIN"), async (req, res) => {
     try {
         const id = req.params.id as string;
+        const adminId = req.user!.id;
 
         await prisma.user.update({
             where: {
@@ -197,6 +204,7 @@ userRouter.patch("/delete/:id", authMiddleware, authorizeRoles("ADMIN"), async (
             },
             data: {
                 deletedAt: new Date(),
+                deletedBy: adminId
             }
         });
 
